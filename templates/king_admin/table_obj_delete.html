@@ -1,0 +1,21 @@
+{% extends 'king_admin/table_index.html' %}
+{% load jon %}
+
+{% block container %}
+    {% display_obj_related obj %}
+    <ul style="color: red">
+        {% for k, v in errors.items %}
+            <li>{{ k }}:{{ v }}</li>
+        {% endfor %}
+    </ul>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" class="btn btn-danger" value="Yes,I'm sure">
+        <input type="hidden" value="yes" name="delete_confirm">  <!--区分连续两次post提交-->
+        <!--action操作与正常删除操作提交的路由地址不同, 点击'Yes,I'm sure'时提交到'king_admin/crm/customer', 又走了一遍display_table_objs函数, 所以仍然需要提供参数-->
+        <input type="hidden" value="{{ selected_ids }}" name="selected_ids">
+        <input type="hidden" value="{{ action }}" name="action">
+        <a class="btn btn-info" href="{% url 'table_objs' app_name model_name  %}">No,Take me back</a>
+    </form>
+{% endblock %}

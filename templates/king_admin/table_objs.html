@@ -1,0 +1,130 @@
+{% extends 'king_admin/table_index.html' %}
+{% load jon %}
+
+{% block container %}
+    {{ admin_class.list_display }}
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">{% get_model_name admin_class %}
+{#                {% if not admin_class.readonly_table %}#}
+                    <a href="{{ request.path }}add" class="pull-right"> Add</a>
+{#                {% endif %}#}
+            </h3>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <form action="" method="get">
+                    {% for filter_field in admin_class.list_filters %}
+                        <div class="col-lg-2">
+                            {% render_filter_ele filter_field admin_class filter_conditions %}
+                        </div>
+                    {% endfor %}
+                    <button type="SUBMIT" class="btn btn-success">过滤</button>
+
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <input type="search" name="_q" class="form-control" style="margin-left: 15px" value="{{ search_text }}">
+                        </div>
+                        <div class="col-lg-3">
+                            <button type="submit" class="btn btn-success">Search</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="row" style="margin-top: 10px">
+                    <form method="post" onsubmit="return ActionSubmit(this)">{% csrf_token %}
+                        <div class="col-lg-2">
+                            <select name="action" id="action_list" class="form-control" style="margin-left: 15px">
+                                <option value="">--------</option>
+                                {% for action in admin_class.actions %}
+{#                                    <option value="{{ action }}">{{ action }}</option>#}
+                                    <option value="{{ action }}">{% get_display_name admin_class action %}</option>
+
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-1">
+                            <button type="submit" class="btn">Go</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 35px"><input type="checkbox" onclick="CheckAllToggle(this)"></th>
+                        {% for column in admin_class.list_display %}
+{#                            <th><a href="?o={{ column }}">{{ column }}</a></th>#}
+                            {% build_table_header_column column orderby_key filter_conditions admin_class %}
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <td>总共{{ query_sets.paginator.count }}条</td>
+                    </tr>
+                </tfoot>
+                <tbody>
+{#                    <!--{% get_query_sets admin_class as query_sets %}  simple_tag的返回结果取别名  做分页后就用不到了-->#}
+                    {% for row in query_sets %}
+                        <tr>
+                            <td><input tag="obj_checkbox" type="checkbox" value="{{ row.id }}"></td>
+                            {% build_table_row request row admin_class %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <nav>
+                <ul class="pagination">
+                    {% if query_sets.has_previous %}
+                        <li class="active"><a href="?page={{ query_sets.previous_page_number }}">上页</a></li>
+                    {% endif %}
+
+{#                    {% for loop_counter in query_sets.paginator.page_range %}#}
+{#                        {% render_page_ele loop_counter query_sets filter_conditions %}#}
+{#                    {% endfor %}#}
+                    {% build_paginators query_sets filter_conditions previous_orderby search_text %}
+
+                    {% if query_sets.has_next %}
+                        <li class="active"><a href="?page={{ query_sets.next_page_number }}">下页</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        function CheckAllToggle(ele) {
+            if ($(ele).prop('checked')) {
+                $('input[tag="obj_checkbox"]').prop('checked', true);
+            }else {
+                $('input[tag="obj_checkbox"]').prop('checked', false);
+            }
+        }
+
+        function ActionSubmit(form_ele) {
+            var selected_ids = [];
+            $('input[tag="obj_checkbox"]:checked').each(function () {
+                selected_ids.push($(this).val());
+            });
+            var selected_action = $('#action_list').val();
+
+            if (selected_ids.length == 0) {
+                alert('No object got selected!');
+                return
+            }
+            if (!selected_action) {
+                alert('No action got selected!');
+            }
+
+            // 动态添加选中的id
+            var selected_ids_ele = "<input name='selected_ids' type='hidden' value='" + selected_ids.toString() + "'>";
+            $(form_ele).append(selected_ids_ele);
+
+            return true;
+
+        }
+    </script>
+{% endblock %}
