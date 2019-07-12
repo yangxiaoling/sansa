@@ -83,15 +83,16 @@ class UserPortal(object):
 
                                 print(login_cmd)
                                 session_tracker_script = settings.SESSION_TRACKER_SCRIPT
-                                tracker_obj = subprocess.Popen('%s %s' % (session_tracker_script, md5_str), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                print(settings.BASE_DIR)
+                                tracker_obj = subprocess.Popen('%s %s' % (session_tracker_script, md5_str), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=settings.BASE_DIR)
 
                                 # 跳板机账号、主机账号、tag保存到数据库, 关联日志保存路径
                                 models.SessionLog.objects.create(user=self.user, bind_host=selected_bindhost, session_tag=md5_str)
 
-                                time.sleep(20)  # 模拟检测程序启动后很长时间, ssh才连接上, 检测程序找不到要检测的进程号, 解决方法是检测程序循环执行一定次数
+                                #time.sleep(20)  # 模拟检测程序启动后很长时间, ssh才连接上, 检测程序找不到要检测的进程号, 解决方法是检测程序循环执行一定次数
                                 ssh_instance = subprocess.run(login_cmd, shell=True)
                                 print("------------logout---------")  # 退出subprocess之后打印
-                                print('tracker', tracker_obj.stdout.read(), tracker_obj.stderr.read())  # /home/missmei/sansa/backend/session_tracker.sh: Permission denied\n
+                                print('tracker', tracker_obj.stdout.read().decode(), tracker_obj.stderr.read().decode())  # /home/missmei/sansa/backend/session_tracker.sh: Permission denied\n
                         if user_input2 == "b":
                             break
                 if user_input == 'q':
